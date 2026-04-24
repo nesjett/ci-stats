@@ -1,0 +1,47 @@
+{
+  "total_count": 3,
+  "workflow_runs": [
+    {
+      "id": 1003,
+      "name": "CI",
+      "run_number": 103,
+      "run_attempt": 1,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "head_sha": "aaa333",
+      "html_url": "https://github.com/acme/app/actions/runs/1003",
+      "created_at": "2026-04-22T10:00:00Z",
+      "pull_requests": []
+    },
+    {
+      "id": 1002,
+      "name": "CI",
+      "run_number": 102,
+      "run_attempt": 1,
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "feature/x",
+      "head_sha": "bbb222",
+      "html_url": "https://github.com/acme/app/actions/runs/1002",
+      "created_at": "2026-04-21T10:00:00Z",
+      "pull_requests": [{ "number": 42 }]
+    },
+    {
+      "id": 1001,
+      "name": "CI",
+      "run_number": 101,
+      "run_attempt": 1,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "head_sha": "aaa111",
+      "html_url": "https://github.com/acme/app/actions/runs/1001",
+      "created_at": "2026-04-20T10:00:00Z",
+      "pull_requests": []
+    }
+  ]
+}

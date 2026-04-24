@@ -1,0 +1,42 @@
+{
+  "total_count": 1,
+  "jobs": [
+    {
+      "id": 90003,
+      "run_id": 1003,
+      "run_attempt": 1,
+      "name": "build",
+      "html_url": "https://github.com/acme/app/actions/runs/1003/job/90003",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-04-22T10:00:05Z",
+      "completed_at": "2026-04-22T10:02:15Z",
+      "steps": [
+        {
+          "name": "Checkout",
+          "number": 1,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-04-22T10:00:05Z",
+          "completed_at": "2026-04-22T10:00:09Z"
+        },
+        {
+          "name": "Install",
+          "number": 2,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-04-22T10:00:09Z",
+          "completed_at": "2026-04-22T10:01:19Z"
+        },
+        {
+          "name": "Test",
+          "number": 3,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-04-22T10:01:19Z",
+          "completed_at": "2026-04-22T10:02:15Z"
+        }
+      ]
+    }
+  ]
+}

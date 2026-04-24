@@ -1,0 +1,63 @@
+{
+  "total_count": 2,
+  "jobs": [
+    {
+      "id": 91001,
+      "run_id": 2001,
+      "run_attempt": 1,
+      "name": "test (ubuntu-latest, 20)",
+      "html_url": "https://github.com/acme/app/actions/runs/2001/job/91001",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-04-22T10:00:00Z",
+      "completed_at": "2026-04-22T10:01:00Z",
+      "steps": [
+        {
+          "name": "Checkout",
+          "number": 1,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-04-22T10:00:00Z",
+          "completed_at": "2026-04-22T10:00:05Z"
+        },
+        {
+          "name": "Run tests",
+          "number": 2,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-04-22T10:00:05Z",
+          "completed_at": "2026-04-22T10:01:00Z"
+        }
+      ]
+    },
+    {
+      "id": 91002,
+      "run_id": 2001,
+      "run_attempt": 1,
+      "name": "test (ubuntu-latest, 22)",
+      "html_url": "https://github.com/acme/app/actions/runs/2001/job/91002",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-04-22T10:00:00Z",
+      "completed_at": "2026-04-22T10:00:45Z",
+      "steps": [
+        {
+          "name": "Checkout",
+          "number": 1,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-04-22T10:00:00Z",
+          "completed_at": "2026-04-22T10:00:04Z"
+        },
+        {
+          "name": "Run tests",
+          "number": 2,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-04-22T10:00:04Z",
+          "completed_at": "2026-04-22T10:00:45Z"
+        }
+      ]
+    }
+  ]
+}

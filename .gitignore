@@ -1,0 +1,5 @@
+dist/
+coverage/
+.claude-flow/
+.DS_Store
+*.log

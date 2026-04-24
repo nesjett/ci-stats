@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: fmt
+        run: deno fmt --check
+      - name: lint
+        run: deno lint
+      - name: typecheck
+        run: deno task check
+      - name: test
+        run: deno task test
+      - name: compile smoke
+        run: deno task compile
