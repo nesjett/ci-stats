@@ -1,0 +1,30 @@
+# Reusable workflow called from explorer-fixture.yml. The explorer does not recurse into
+# reusable workflows — this whole job appears as a single opaque entry in the report,
+# which is the documented behavior we want to verify.
+name: explorer-reusable
+
+on:
+  workflow_call:
+    inputs:
+      label:
+        description: An arbitrary label printed by the inner job.
+        required: false
+        type: string
+        default: "no-label"
+
+permissions:
+  contents: read
+
+jobs:
+  inner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Echo label
+        env:
+          LABEL: ${{ inputs.label }}
+        run: echo "called with label=$LABEL"
+      - name: Slow inner step
+        run: sleep 3 && echo "inner work done"
+      - name: Tail
+        run: echo "reusable inner finished"

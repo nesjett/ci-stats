@@ -1,0 +1,195 @@
+# Synthetic workflow that exercises every shape `gh-workflow-explorer` cares about:
+#  - many jobs and many steps
+#  - matrix expansion (rendered as distinct job groups by the explorer)
+#  - job dependencies (`needs:`) producing queue gaps in the timing
+#  - conditional / skipped steps
+#  - a step that intentionally fails sometimes (continue-on-error)
+#  - a reusable-workflow call (rendered as an opaque single job)
+#  - an aggregation job with `if: always()`
+#
+# Triggers: only when the fixture itself changes, or on manual dispatch.
+# All commands are sleep/echo — minutes cost is intentionally tiny.
+name: explorer-fixture
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/explorer-fixture.yml"
+      - ".github/workflows/explorer-reusable.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        run: echo "preparing tools"
+      - name: Format check
+        run: sleep 2 && echo "fmt ok"
+      - name: Lint pass A
+        run: sleep 3 && echo "lint a ok"
+      - name: Lint pass B
+        run: sleep 1 && echo "lint b ok"
+      - name: Skipped on main only
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: echo "main-only step"
+      - name: Compute version
+        id: ver
+        run: echo "version=1.2.3" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [20, 22]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    env:
+      OS_LABEL: ${{ matrix.os }}
+      NODE_VERSION: ${{ matrix.node }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Print matrix cell
+        shell: bash
+        run: echo "Building on $OS_LABEL with node $NODE_VERSION"
+      - name: Compile (fake)
+        shell: bash
+        run: sleep $((RANDOM % 4 + 2)) && echo "compile ok"
+      - name: Bundle (fake)
+        shell: bash
+        run: sleep $((RANDOM % 3 + 1)) && echo "bundle ok"
+      - name: Skip on macOS only
+        if: ${{ matrix.os == 'macos-latest' }}
+        shell: bash
+        run: echo "macOS-specific packaging"
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Echo upstream version
+        run: echo "Version was ${{ needs.lint.outputs.version }}"
+      - name: Unit tests
+        run: sleep 3 && echo "unit ok"
+      - name: Integration tests
+        run: sleep 5 && echo "integration ok"
+      - name: E2E tests
+        run: sleep 4 && echo "e2e ok"
+      - name: Coverage
+        if: ${{ success() }}
+        run: 'echo "coverage: 92%"'
+      - name: Skipped (false guard)
+        if: ${{ false }}
+        run: echo "intentionally skipped"
+      - name: Wrap up
+        run: echo "test job done"
+
+  heavy:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Step 01 prepare
+        run: echo "01 prepare"
+      - name: Step 02 fetch deps
+        run: sleep 1 && echo "02 fetch"
+      - name: Step 03 cache restore
+        run: echo "03 cache restore"
+      - name: Step 04 generate sources
+        run: sleep 2 && echo "04 generate"
+      - name: Step 05 protobuf compile
+        run: sleep 1 && echo "05 protobuf"
+      - name: Step 06 frontend build
+        run: sleep 3 && echo "06 frontend"
+      - name: Step 07 backend build
+        run: sleep 4 && echo "07 backend"
+      - name: Step 08 native module
+        run: sleep 2 && echo "08 native"
+      - name: Step 09 link
+        run: sleep 1 && echo "09 link"
+      - name: Step 10 strip symbols
+        run: echo "10 strip"
+      - name: Step 11 sign artifacts
+        run: sleep 1 && echo "11 sign"
+      - name: Step 12 archive
+        run: sleep 2 && echo "12 archive"
+      - name: Step 13 upload artifact a
+        run: echo "13 upload a"
+      - name: Step 14 upload artifact b
+        run: echo "14 upload b"
+      - name: Step 15 upload artifact c
+        run: echo "15 upload c"
+      - name: Step 16 generate manifest
+        run: echo "16 manifest"
+      - name: Step 17 verify checksums
+        run: echo "17 verify"
+      - name: Step 18 publish dry-run
+        run: sleep 1 && echo "18 dry-run"
+      - name: Step 19 cleanup
+        run: echo "19 cleanup"
+      - name: Step 20 done
+        run: echo "20 done"
+
+  flaky:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - name: Setup
+        run: echo "starting flaky job"
+      - name: Pre-flake delay
+        run: sleep 2
+      - name: Roll the dice
+        shell: bash
+        run: |
+          n=$((RANDOM % 3))
+          echo "rolled $n"
+          if [ "$n" -eq 0 ]; then
+            echo "intentional failure to exercise red rendering"
+            exit 1
+          fi
+      - name: Post-flake (only if previous succeeded)
+        run: echo "passed the roll"
+      - name: Always-runs cleanup
+        if: ${{ always() }}
+        run: echo "cleanup regardless"
+
+  reusable:
+    needs: lint
+    uses: ./.github/workflows/explorer-reusable.yml
+    with:
+      label: ${{ needs.lint.outputs.version }}
+
+  summary:
+    needs: [test, heavy, flaky, reusable]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Print outcomes
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+          HEAVY_RESULT: ${{ needs.heavy.result }}
+          FLAKY_RESULT: ${{ needs.flaky.result }}
+          REUSABLE_RESULT: ${{ needs.reusable.result }}
+        run: |
+          echo "test=$TEST_RESULT heavy=$HEAVY_RESULT flaky=$FLAKY_RESULT reusable=$REUSABLE_RESULT"
+      - name: Final note
+        run: echo "explorer-fixture done"
