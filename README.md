@@ -79,6 +79,9 @@ gh-workflow-explorer -w ci.yml
 # Only runs linked to PR #42
 gh-workflow-explorer -w ci.yml --pr 42
 
+# JSON output for an AI agent or pipeline (compact; pipe through jq to indent)
+gh-workflow-explorer -w ci.yml -r json | jq '.data.jobs[0].steps[].stepName'
+
 # Another repo, more history
 gh-workflow-explorer -w release.yml -R torvalds/linux -n 50
 ```
@@ -117,8 +120,74 @@ If a job has too many steps to fit the terminal, the table is split into **multi
 that share the Run column, each annotated with `(steps a–b of N)`. No data is dropped. Step names
 longer than 36 characters are middle-truncated (`Run GIT_MESSAGE=$(…fe5e4fa5e306604b)`) and listed
 in full in a dim footnote at the end of each job. Set `NO_COLOR=1` or pass `--no-color` to strip
-ANSI escapes entirely; the URL won't be visible in that mode (use `--reporter json` once available
-for machine-readable output).
+ANSI escapes entirely; for machine-readable output use `-r json` (see below).
+
+### 🤖 JSON output (for AI agents and tooling)
+
+```sh
+# Compact, single-line JSON — friendly for LLMs, scripts, and pipelines.
+gh-workflow-explorer -w ci.yml -r json
+
+# Pipe through jq if you want it indented for humans.
+gh-workflow-explorer -w ci.yml -r json | jq '.data.jobs[0]'
+```
+
+The output wraps the report in a small envelope so consumers can identify the format:
+
+```jsonc
+{
+  "schema": "gh-workflow-explorer/v1",
+  "generatedBy": "gh-workflow-explorer",
+  "data": {
+    "repo": { "owner": "acme", "name": "app" },
+    "workflow": { "file": "ci.yml", "id": null, "name": null },
+    "filter": { "pullRequest": 42, "limit": 20, "includeReruns": false },
+    "generatedAt": "2026-04-29T09:14:22.318Z",
+    "runCount": 1,
+    "jobs": [
+      {
+        "jobName": "build",
+        "steps": [
+          {
+            "id": "build::Run tests", // stable join key
+            "stepName": "Run tests",
+            "executions": [
+              {
+                "id": "14857392041-1-3", // runId-attempt-stepNumber
+                "runId": 14857392041,
+                "runNumber": 312,
+                "runHtmlUrl": "https://github.com/acme/app/actions/runs/14857392041",
+                "headBranch": "feat/json-reporter",
+                "headSha": "9f1c0b3a…",
+                "attempt": 1,
+                "stepNumber": 3,
+                "status": "completed",
+                "conclusion": "success",
+                "durationMs": 70123,
+                "deltaMsFromPrevious": -4200
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Schema contract**:
+
+- Field names match the in-memory domain types (camelCase, integer milliseconds, ISO-8601 UTC
+  timestamps with `Z`).
+- Every nullable field is **always emitted** — never omitted — so consumers can distinguish "absent"
+  from "explicitly null" without sniffing.
+- Each `StepGroup` carries a synthetic `id = "${jobName}::${stepName}"` and each `StepExecution`
+  carries `id = "${runId}-${attempt}-${stepNumber}"` — use them as stable join keys when diffing
+  reports.
+- Output is always **compact** (no whitespace, single trailing newline). Pipe through `jq` to
+  indent.
+- Additive changes (new optional fields) stay on `gh-workflow-explorer/v1`. Renames, removals, or
+  type changes bump to `v2`. Consumers must ignore unknown keys.
 
 ## 📊 How deltas are computed
 
