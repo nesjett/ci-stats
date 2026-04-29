@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/nesjett/Github-workflow-explorer/compare/gh-workflow-explorer-v0.1.1...gh-workflow-explorer-v0.1.2) (2026-04-29)
+
+
+### Bug Fixes
+
+* **deno:** add exclude option for formatting configuration ([94c26a1](https://github.com/nesjett/Github-workflow-explorer/commit/94c26a1c76a6bb88c63490bd8663a42dfefc6160))
+
 ## [0.1.1](https://github.com/nesjett/Github-workflow-explorer/compare/gh-workflow-explorer-v0.1.0...gh-workflow-explorer-v0.1.1) (2026-04-29)
 
 
