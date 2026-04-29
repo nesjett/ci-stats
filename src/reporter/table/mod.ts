@@ -1,7 +1,7 @@
 import * as colors from "@std/fmt/colors";
-import type { Conclusion, JobGroup, ReportData, StepExecution } from "../domain/types.ts";
-import type { ReporterContext, ReporterFactory } from "./reporter.ts";
-import { formatMs } from "../util/time.ts";
+import type { Conclusion, JobGroup, ReportData, StepExecution } from "../../domain/types.ts";
+import type { ReporterContext, ReporterFactory } from "../reporter.ts";
+import { formatMs } from "../../util/time.ts";
 import { BOX, osc8Link, renderGrid, truncateMiddle, visibleLength } from "./grid.ts";
 
 const DEFAULT_WIDTH = 120;
