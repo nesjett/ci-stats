@@ -23,6 +23,7 @@ OPTIONS:
 EXAMPLES:
   gh-workflow-explorer -w ci.yml
   gh-workflow-explorer -w ci.yml --pr 42
+  gh-workflow-explorer -w ci.yml -r json | jq '.data.jobs[0]'
   gh-workflow-explorer -w ci.yml -R acme/app -n 50
 
 Requires: gh (https://cli.github.com/) on PATH and authenticated (gh auth login).
