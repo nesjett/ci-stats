@@ -36,6 +36,13 @@ export class GhInvocationError extends AppError {
   }
 }
 
+export class RepoNotResolvedError extends AppError {
+  readonly code = 13;
+  constructor(detail: string) {
+    super(`could not infer current repo from gh: ${detail}`);
+  }
+}
+
 export class WorkflowNotFoundError extends AppError {
   readonly code = 20;
   constructor(file: string) {

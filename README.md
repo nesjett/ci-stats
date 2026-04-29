@@ -189,6 +189,67 @@ The output wraps the report in a small envelope so consumers can identify the fo
 - Additive changes (new optional fields) stay on `gh-workflow-explorer/v1`. Renames, removals, or
   type changes bump to `v2`. Consumers must ignore unknown keys.
 
+## 🤖 Use as an MCP server (Claude Code, Cursor, …)
+
+`gh-workflow-explorer` ships an [MCP](https://modelcontextprotocol.io) server so coding agents can
+ask for a workflow report directly instead of shelling out to the CLI. It speaks JSON-RPC over
+stdio, exposes one tool — `get_workflow_report` — and returns the same `gh-workflow-explorer/v1`
+envelope the JSON reporter emits.
+
+### Build the MCP binary
+
+```sh
+deno task compile:mcp           # → dist/gh-workflow-explorer-mcp
+```
+
+(or run from source with `deno task mcp` for development)
+
+### Register with Claude Code
+
+```jsonc
+// ~/.claude/mcp.json (or project-level .mcp.json)
+{
+  "mcpServers": {
+    "gh-workflow-explorer": {
+      "command": "/absolute/path/to/dist/gh-workflow-explorer-mcp"
+    }
+  }
+}
+```
+
+### Register with Cursor / Cline / Continue / Windsurf
+
+Most clients use the same `command + args + env` shape. Point `command` at the compiled binary
+(or use `deno` with `args: ["run", "--allow-run=gh", "--allow-env", "/path/to/src/mcp/main.ts"]`
+during development).
+
+### Available tool
+
+#### `get_workflow_report`
+
+| Arg             | Type   | Required | Description                                                    |
+| --------------- | ------ | -------- | -------------------------------------------------------------- |
+| `workflow`      | string | yes      | Workflow filename, e.g. `ci.yml`                               |
+| `repo`          | string | no       | `<owner>/<name>` — defaults to the current `gh` repo           |
+| `pullRequest`   | int    | no       | Filter to runs linked to this PR number                        |
+| `limit`         | int    | no       | Max runs after filtering (1..100, default 20)                  |
+| `includeReruns` | bool   | no       | Include non-final run attempts (default false)                 |
+
+Returns the same JSON envelope as `gh-workflow-explorer -r json`. Errors surface as MCP `isError`
+results carrying a structured `{kind, code, message}` payload — `code` matches the CLI's
+[exit codes](#-exit-codes) so agents can branch on a stable contract.
+
+### Requirements & permissions
+
+The MCP server inherits your local `gh` authentication — there are no tokens of its own. It needs
+the same Deno permissions as the CLI: `--allow-run=gh --allow-env`. Stdio transport means **no
+network permission** is required.
+
+> **Security note.** Running this MCP server effectively gives the connecting agent read access to
+> anything your local `gh` can read. Treat the MCP socket like the `gh` CLI itself.
+
+Set `MCP_VERBOSE=1` for debug logging on stderr (stdout is reserved for JSON-RPC).
+
 ## 📊 How deltas are computed
 
 For each step, the tool sorts its executions chronologically and, for each run, compares against the

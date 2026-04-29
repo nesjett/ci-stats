@@ -25,14 +25,39 @@ bump the minor (not the major).
 
 ```sh
 deno run --allow-run=gh --allow-env src/main.ts -w ci.yml --pr 1   # run the CLI in dev mode
+deno task mcp                    # run the MCP server over stdio (for coding-agent integration)
 deno task test                   # run unit + integration tests (no network)
 deno task check                  # typecheck src + tests
 deno task lint                   # deno lint
 deno task fmt                    # apply formatter
 deno task compile                # produce dist/gh-workflow-explorer for the current host
+deno task compile:mcp            # produce dist/gh-workflow-explorer-mcp (the MCP binary)
 ```
 
 CI must pass before merge: `fmt --check`, `lint`, `check`, `test`, and a Linux compile smoke.
+
+## MCP server architecture
+
+The MCP server lives under `src/mcp/` and exposes the existing `buildReport` core to coding agents
+(Claude Code, Cursor, etc.) via stdio JSON-RPC. It does **not** spawn or shell out to the CLI binary;
+it imports `buildReport` directly so there is one code path and one schema.
+
+```
+src/mcp/
+├── main.ts        stdio entrypoint — logs to stderr only (stdout is JSON-RPC)
+├── server.ts      createServer(deps) — wires McpServer + tool registration
+├── tools.ts       registerTools — handler that calls buildReport, maps errors
+└── schema.ts      Zod input shape for `get_workflow_report`
+```
+
+The tool returns the **same** envelope (`{schema:"gh-workflow-explorer/v1", generatedBy, data}`) the
+JSON reporter emits. Both share `src/reporter/json/envelope.ts` so the schema cannot drift.
+
+`AppError` instances surface as `isError: true` tool results carrying `{kind, code, message}`,
+mirroring the CLI's exit codes. Non-`AppError` exceptions log the stack to stderr and surface as a
+generic `InternalError`.
+
+Set `MCP_VERBOSE=1` to enable debug logging on stderr and include stack traces in error payloads.
 
 ## Adding a new reporter
 

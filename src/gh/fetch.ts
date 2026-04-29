@@ -1,5 +1,5 @@
 import type { JobGroup, ReportData, WorkflowRun } from "../domain/types.ts";
-import { WorkflowNotFoundError } from "../domain/errors.ts";
+import { RepoNotResolvedError, WorkflowNotFoundError } from "../domain/errors.ts";
 import { assertAuthenticated, ghApi, type GhClient } from "./client.ts";
 import { type JobsPayload, mapJobs, mapRunMeta, type RunsListPayload } from "./mapping.ts";
 import { groupByJobAndStep } from "../analysis/group.ts";
@@ -21,11 +21,13 @@ const CONCURRENCY_DEFAULT = 5;
 export async function resolveRepo(gh: GhClient): Promise<{ owner: string; name: string }> {
   const out = await gh.run(["repo", "view", "--json", "nameWithOwner"]);
   if (out.code !== 0) {
-    throw new Error(`failed to infer repo from gh (${out.stderr.trim() || "no stderr"})`);
+    throw new RepoNotResolvedError(out.stderr.trim() || "no stderr");
   }
   const parsed = JSON.parse(out.stdout) as { nameWithOwner: string };
   const [owner, name] = parsed.nameWithOwner.split("/");
-  if (!owner || !name) throw new Error(`unexpected nameWithOwner: ${parsed.nameWithOwner}`);
+  if (!owner || !name) {
+    throw new RepoNotResolvedError(`unexpected nameWithOwner: ${parsed.nameWithOwner}`);
+  }
   return { owner, name };
 }
 

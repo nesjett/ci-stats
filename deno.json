@@ -3,17 +3,24 @@
   "exports": "./src/main.ts",
   "tasks": {
     "dev": "deno run --allow-run=gh --allow-env src/main.ts",
+    "mcp": "deno run --allow-run=gh --allow-env src/mcp/main.ts",
     "test": "deno test --allow-read=tests/fixtures",
-    "check": "deno check src/main.ts tests/**/*.ts",
+    "check": "deno check src/main.ts src/mcp/main.ts tests/**/*.ts",
     "fmt": "deno fmt",
     "lint": "deno lint",
-    "compile": "deno compile --allow-run=gh --allow-env=NO_COLOR,HOME,PATH --output dist/gh-workflow-explorer src/main.ts"
+    "compile": "deno compile --allow-run=gh --allow-env=NO_COLOR,HOME,PATH --output dist/gh-workflow-explorer src/main.ts",
+    "compile:mcp": "deno compile --allow-run=gh --allow-env=NO_COLOR,HOME,PATH,XDG_CONFIG_HOME,GH_TOKEN,GITHUB_TOKEN,GH_HOST,MCP_VERBOSE --output dist/gh-workflow-explorer-mcp src/mcp/main.ts"
   },
   "imports": {
     "@std/cli/parse-args": "jsr:@std/cli@^1/parse-args",
     "@std/assert": "jsr:@std/assert@^1",
     "@std/fmt/colors": "jsr:@std/fmt@^1/colors",
-    "@std/async/pool": "jsr:@std/async@^1/pool"
+    "@std/async/pool": "jsr:@std/async@^1/pool",
+    "@mcp/server": "npm:@modelcontextprotocol/sdk@^1.29.0/server/mcp.js",
+    "@mcp/stdio": "npm:@modelcontextprotocol/sdk@^1.29.0/server/stdio.js",
+    "@mcp/in-memory": "npm:@modelcontextprotocol/sdk@^1.29.0/inMemory.js",
+    "@mcp/client": "npm:@modelcontextprotocol/sdk@^1.29.0/client/index.js",
+    "zod": "npm:zod@^3.25"
   },
   "fmt": {
     "lineWidth": 100,
