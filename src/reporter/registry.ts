@@ -1,6 +1,6 @@
 import { UnknownReporterError } from "../domain/errors.ts";
 import type { ReporterFactory } from "./reporter.ts";
-import { tableReporter } from "./table.ts";
+import { tableReporter } from "./table/mod.ts";
 
 const builtins: Readonly<Record<string, ReporterFactory>> = {
   table: tableReporter,

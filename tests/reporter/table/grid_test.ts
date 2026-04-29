@@ -1,5 +1,10 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { renderGrid, truncateEnd, truncateMiddle, visibleLength } from "../../src/reporter/grid.ts";
+import {
+  renderGrid,
+  truncateEnd,
+  truncateMiddle,
+  visibleLength,
+} from "../../../src/reporter/table/grid.ts";
 
 Deno.test("visibleLength: strips ANSI color escapes", () => {
   assertEquals(visibleLength("\x1b[31mhi\x1b[0m"), 2);

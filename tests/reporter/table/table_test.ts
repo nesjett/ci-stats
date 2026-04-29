@@ -1,9 +1,9 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { tableReporter } from "../../src/reporter/table.ts";
-import type { ReportData } from "../../src/domain/types.ts";
-import { groupByJobAndStep } from "../../src/analysis/group.ts";
-import { mapJobs, mapRunMeta } from "../../src/gh/mapping.ts";
-import { loadFixture } from "../fake_gh.ts";
+import { tableReporter } from "../../../src/reporter/table/mod.ts";
+import type { ReportData } from "../../../src/domain/types.ts";
+import { groupByJobAndStep } from "../../../src/analysis/group.ts";
+import { mapJobs, mapRunMeta } from "../../../src/gh/mapping.ts";
+import { loadFixture } from "../../fake_gh.ts";
 
 async function buildReport(): Promise<ReportData> {
   const payload = JSON.parse(await loadFixture("runs_list.json"));

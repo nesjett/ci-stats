@@ -165,14 +165,31 @@ The project separates fetching, analysis, and presentation:
 
 ```
 src/
-├── gh/          shells out to gh, maps raw JSON to domain types
-├── analysis/    pure grouping and delta math (no IO)
-├── reporter/    pluggable renderers (table is the default)
-└── cli/         arg parsing, help, run orchestration
+├── gh/                shells out to gh, maps raw JSON to domain types
+├── analysis/          pure grouping and delta math (no IO)
+├── reporter/
+│   ├── reporter.ts    Reporter interface + ReporterContext
+│   ├── registry.ts    static name → factory map (e.g. "table")
+│   └── table/         the default reporter
+│       ├── mod.ts     tableReporter — domain/render orchestration
+│       └── grid.ts    ANSI-aware grid renderer with Unicode box borders
+└── cli/               arg parsing, help, run orchestration
 ```
 
-New reporters (JSON, CSV, HTML) are single-file additions — implement `Reporter` and register it in
-`src/reporter/registry.ts`.
+Each reporter lives in its **own subfolder** under `src/reporter/`. Adding a new reporter is two
+steps:
+
+1. Create `src/reporter/<name>/mod.ts` exporting a `ReporterFactory` (e.g. `jsonReporter`,
+   `csvReporter`, `htmlReporter`). Helper modules — templates, escaping, etc. — sit alongside it in
+   the same subfolder so they don't leak into other reporters.
+2. Register it in `src/reporter/registry.ts`:
+   ```ts
+   import { jsonReporter } from "./json/mod.ts";
+   const builtins: Readonly<Record<string, ReporterFactory>> = {
+     table: tableReporter,
+     json: jsonReporter,
+   };
+   ```
 
 ## 🧪 Testing against the bundled fixture
 
