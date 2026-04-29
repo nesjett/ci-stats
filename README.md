@@ -1,9 +1,10 @@
 # gh-workflow-explorer
 
-Analyze GitHub Actions workflow runs from the terminal. Given a workflow file and optionally a
-pull-request number, it fetches recent runs, groups executions **per step**, and shows each step's
-duration plus the **delta vs the previous successful run on the same branch** — so you can spot the
-step that quietly got slower.
+Analyze GitHub Actions workflow runs for a pull request from the terminal. Given a workflow file and
+a PR number, it fetches every run of that workflow linked to the PR and renders **one table per
+job**, where each row is a run and each column is a step. Each cell shows the step duration and the
+**delta vs the previous successful run on the same branch** — so you can spot the step that quietly
+got slower across the PR's history.
 
 ## Install
 
@@ -35,7 +36,7 @@ deno task compile
 Or run directly from source:
 
 ```sh
-deno run --allow-run=gh --allow-env src/main.ts -w ci.yml
+deno run --allow-run=gh --allow-env src/main.ts -w ci.yml --pr 42
 ```
 
 ## Requirements
@@ -46,14 +47,14 @@ deno run --allow-run=gh --allow-env src/main.ts -w ci.yml
 ## Usage
 
 ```
-gh-workflow-explorer -w <workflow-file> [options]
+gh-workflow-explorer -w <workflow-file> --pr <N> [options]
 
 Required:
   -w, --workflow <file>     Workflow filename (e.g. ci.yml)
+      --pr <N>              Pull request number to analyze
 
 Options:
   -R, --repo <owner/name>   Target repo (defaults to the current gh repo)
-      --pr <N>              Filter to runs linked to pull request N
   -r, --reporter <name>     Output reporter (default: table)
   -n, --limit <int>         Max runs after filtering (default: 20)
       --include-reruns      Include non-final run attempts
@@ -66,15 +67,47 @@ Options:
 ### Examples
 
 ```sh
-# Last 20 runs of the ci.yml workflow in the current repo
-gh-workflow-explorer -w ci.yml
-
-# Only runs linked to PR #42
+# Runs of ci.yml linked to PR #42 in the current repo
 gh-workflow-explorer -w ci.yml --pr 42
 
 # Another repo, more history
-gh-workflow-explorer -w release.yml -R torvalds/linux -n 50
+gh-workflow-explorer -w release.yml -R torvalds/linux --pr 1337 -n 50
 ```
+
+### Output shape
+
+For each job in the workflow, one table is printed with dim `│` column separators and a `─` rule
+under the header. **The run number is itself a clickable hyperlink** to the run on github.com (via
+OSC 8 terminal escapes — supported by iTerm2, Windows Terminal, GNOME Terminal, WezTerm, kitty,
+Alacritty and others; older terminals just show plain text).
+
+```
+▶ build
+  Run             │ Checkout   │ Install        │ Test
+  ─────────────────────────────────────────────────────────
+  ✓ #103 (1003)   │ 4s ▼1s     │ 1m10s ▲10s     │ 56s ▲1s
+  ✓ #102 (1002)   │ 6s         │ 1m20s          │ 1m34s
+  ✓ #101 (1001)   │ 5s         │ 1m00s          │ 55s
+```
+
+Rows are the PR's runs, newest on top. Columns are the steps in execution order. Colors:
+
+- **Run label** tinted by overall conclusion (green success, red failure, yellow cancelled), with a
+  matching `✓` / `✗` / `⊘` / `·` (skipped) glyph so the signal survives `NO_COLOR`.
+- **Deltas** carry a `▲` (slower) or `▼` (faster) arrow plus a magnitude tier:
+  - **Bold red** `▲30s` — significant regression (≥20% AND ≥1s)
+  - **Red** `▲10s` — regular regression
+  - **Dim** `▲500ms` — trivial change (<500 ms or <5%)
+  - **Green** `▼3s` — improvement
+  - **Dim** `±0` — no change
+- Column headers and the `▶` job marker in **cyan**, borders in **dim** so data stands out.
+
+If a job has too many steps to fit the terminal, the table is split into **multiple sub-tables**
+that share the Run column, each annotated with `(steps a–b of N)`. No data is dropped. Step names
+longer than 36 characters are middle-truncated (`Run GIT_MESSAGE=$(…fe5e4fa5e306604b)`) and listed
+in full in a dim footnote at the end of each job. Set `NO_COLOR=1` or pass `--no-color` to strip
+ANSI escapes entirely; the URL won't be visible in that mode (use `--reporter json` once available
+for machine-readable output).
 
 ## How deltas are computed
 
@@ -106,8 +139,9 @@ First-in-series, skipped, and in-flight executions show `—` instead of a delta
   composite action.
 - **Reusable workflows** (`uses: owner/repo/.github/workflows/other.yml`) surface as one opaque job.
   The tool does not recurse.
-- **`--pr` for fork PRs** filters by PR head SHA, which can miss runs on force-pushed PRs where the
-  SHA was rewritten.
+- **`--pr` matching** uses the PR's commit SHAs (via `gh pr view`) combined with the runs'
+  `pull_requests` array. Force-pushed PRs whose older SHAs are no longer reachable may lose some
+  historical runs.
 - **Step rename / reorder**: steps are keyed by `(job.name, step.number, step.name)`. If a step is
   renamed, its history splits into two rows — this is deliberate. Fuzzy matching would risk silently
   merging unrelated steps.
