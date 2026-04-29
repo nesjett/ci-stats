@@ -10,8 +10,8 @@ REQUIRED:
   -w, --workflow <file>     Workflow filename (e.g. ci.yml)
 
 OPTIONS:
-  -R, --repo <owner/name>   Target repo (defaults to the current gh repo)
       --pr <N>              Filter to runs linked to pull request N
+  -R, --repo <owner/name>   Target repo (defaults to the current gh repo)
   -r, --reporter <name>     Output reporter: ${listReporters().join(", ")} (default: table)
   -n, --limit <int>         Max runs after filtering (default: 20)
       --include-reruns      Include non-final run attempts

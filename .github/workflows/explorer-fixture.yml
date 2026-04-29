@@ -7,15 +7,11 @@
 #  - a reusable-workflow call (rendered as an opaque single job)
 #  - an aggregation job with `if: always()`
 #
-# Triggers: only when the fixture itself changes, or on manual dispatch.
+# Triggers: manual only — run via the Actions tab or `gh workflow run explorer-fixture.yml`.
 # All commands are sleep/echo — minutes cost is intentionally tiny.
 name: explorer-fixture
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/explorer-fixture.yml"
-      - ".github/workflows/explorer-reusable.yml"
   workflow_dispatch:
 
 permissions:

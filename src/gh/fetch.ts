@@ -29,11 +29,43 @@ export async function resolveRepo(gh: GhClient): Promise<{ owner: string; name: 
   return { owner, name };
 }
 
+async function resolvePrShas(
+  gh: GhClient,
+  owner: string,
+  repo: string,
+  pr: number,
+): Promise<Set<string>> {
+  const args = [
+    "pr",
+    "view",
+    String(pr),
+    "--repo",
+    `${owner}/${repo}`,
+    "--json",
+    "headRefOid,commits",
+  ];
+  const out = await gh.run(args);
+  if (out.code !== 0) {
+    throw new Error(`failed to resolve PR #${pr}: ${out.stderr.trim() || "no stderr"}`);
+  }
+  const parsed = JSON.parse(out.stdout) as {
+    headRefOid?: string;
+    commits?: ReadonlyArray<{ oid: string }>;
+  };
+  const shas = new Set<string>();
+  if (parsed.headRefOid) shas.add(parsed.headRefOid);
+  for (const c of parsed.commits ?? []) shas.add(c.oid);
+  return shas;
+}
+
 export async function buildReport(gh: GhClient, opts: FetchOptions): Promise<ReportData> {
   await assertAuthenticated(gh);
   const { owner, repo, workflowFile, pullRequest, limit, includeReruns, logger } = opts;
 
-  logger.debug(`fetching runs for workflow ${workflowFile} in ${owner}/${repo}`);
+  const filterDescription = pullRequest !== null ? ` (PR #${pullRequest})` : "";
+  logger.debug(
+    `fetching runs for workflow ${workflowFile} in ${owner}/${repo}${filterDescription}`,
+  );
   const overFetch = pullRequest !== null ? Math.max(limit * 3, 30) : limit;
   const listPath = `repos/${owner}/${repo}/actions/workflows/${workflowFile}/runs` +
     `?per_page=${Math.min(overFetch, 100)}`;
@@ -47,9 +79,14 @@ export async function buildReport(gh: GhClient, opts: FetchOptions): Promise<Rep
   }
 
   const runsMeta = listResp.workflow_runs.map(mapRunMeta);
-  const filtered = pullRequest !== null
-    ? runsMeta.filter((r) => r.pullRequestNumbers.includes(pullRequest))
-    : runsMeta;
+  let filtered = runsMeta;
+  if (pullRequest !== null) {
+    const prShas = await resolvePrShas(gh, owner, repo, pullRequest);
+    logger.debug(`resolved ${prShas.size} commit SHA(s) for PR #${pullRequest}`);
+    filtered = runsMeta.filter((r) =>
+      r.pullRequestNumbers.includes(pullRequest) || prShas.has(r.headSha)
+    );
+  }
   const limited = filtered.slice(0, limit);
   logger.debug(
     `fetched ${runsMeta.length} runs; ${filtered.length} match filter; ${limited.length} after limit`,

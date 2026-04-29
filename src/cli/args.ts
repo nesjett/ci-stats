@@ -57,13 +57,17 @@ export function parseCliArgs(argv: readonly string[], env: EnvReader): CliOption
   const workflow = parsed.workflow;
   if (!workflow) throw new InvalidArgsError("missing --workflow. Run with --help.");
 
+  let pullRequest: number | null = null;
+  if (parsed.pr !== undefined) {
+    const n = parseIntOr(parsed.pr, NaN, "--pr");
+    if (!Number.isFinite(n) || n <= 0) {
+      throw new InvalidArgsError("--pr must be a positive integer");
+    }
+    pullRequest = n;
+  }
+
   const limit = parseIntOr(parsed.limit, 20, "--limit");
   if (limit <= 0) throw new InvalidArgsError("--limit must be positive");
-
-  const pullRequest = parsed.pr !== undefined ? parseIntOr(parsed.pr, NaN, "--pr") : null;
-  if (pullRequest !== null && !Number.isFinite(pullRequest)) {
-    throw new InvalidArgsError("--pr must be an integer");
-  }
 
   const envNoColor = env.get("NO_COLOR") !== undefined;
   const color = !envNoColor && !parsed["no-color"];
