@@ -24,7 +24,7 @@ bump the minor (not the major).
 ## Development
 
 ```sh
-deno run --allow-run=gh --allow-env src/main.ts -w ci.yml   # run the CLI in dev mode
+deno run --allow-run=gh --allow-env src/main.ts -w ci.yml --pr 1   # run the CLI in dev mode
 deno task test                   # run unit + integration tests (no network)
 deno task check                  # typecheck src + tests
 deno task lint                   # deno lint
@@ -48,6 +48,22 @@ CI must pass before merge: `fmt --check`, `lint`, `check`, `test`, and a Linux c
 
 Reporters consume `ReportData` and nothing else — they never touch `gh` or the filesystem unless
 they have a reason to.
+
+## End-to-end fixture workflow
+
+`.github/workflows/explorer-fixture.yml` is a synthetic CI workflow that exists purely to give the
+explorer something rich to render against the live API: many jobs, a 2×2 matrix, conditional skips,
+an intentionally flaky job, a reusable workflow call, and a `heavy` job with 20 steps to exercise
+horizontal pagination. It is gated on `paths:` so it only runs when the fixture itself changes, plus
+`workflow_dispatch` for manual triggering. To produce sample data:
+
+```sh
+gh workflow run explorer-fixture.yml --ref <branch>
+# wait for runs to finish, then:
+gh-workflow-explorer -w explorer-fixture.yml --pr <PR-number>
+```
+
+Edit the fixture when you need to verify a new edge case end-to-end.
 
 ## Tests
 
