@@ -219,21 +219,21 @@ deno task compile:mcp           # → dist/gh-workflow-explorer-mcp
 
 ### Register with Cursor / Cline / Continue / Windsurf
 
-Most clients use the same `command + args + env` shape. Point `command` at the compiled binary
-(or use `deno` with `args: ["run", "--allow-run=gh", "--allow-env", "/path/to/src/mcp/main.ts"]`
-during development).
+Most clients use the same `command + args + env` shape. Point `command` at the compiled binary (or
+use `deno` with `args: ["run", "--allow-run=gh", "--allow-env", "/path/to/src/mcp/main.ts"]` during
+development).
 
 ### Available tool
 
 #### `get_workflow_report`
 
-| Arg             | Type   | Required | Description                                                    |
-| --------------- | ------ | -------- | -------------------------------------------------------------- |
-| `workflow`      | string | yes      | Workflow filename, e.g. `ci.yml`                               |
-| `repo`          | string | no       | `<owner>/<name>` — defaults to the current `gh` repo           |
-| `pullRequest`   | int    | no       | Filter to runs linked to this PR number                        |
-| `limit`         | int    | no       | Max runs after filtering (1..100, default 20)                  |
-| `includeReruns` | bool   | no       | Include non-final run attempts (default false)                 |
+| Arg             | Type   | Required | Description                                          |
+| --------------- | ------ | -------- | ---------------------------------------------------- |
+| `workflow`      | string | yes      | Workflow filename, e.g. `ci.yml`                     |
+| `repo`          | string | no       | `<owner>/<name>` — defaults to the current `gh` repo |
+| `pullRequest`   | int    | no       | Filter to runs linked to this PR number              |
+| `limit`         | int    | no       | Max runs after filtering (1..100, default 20)        |
+| `includeReruns` | bool   | no       | Include non-final run attempts (default false)       |
 
 Returns the same JSON envelope as `gh-workflow-explorer -r json`. Errors surface as MCP `isError`
 results carrying a structured `{kind, code, message}` payload — `code` matches the CLI's

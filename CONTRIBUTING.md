@@ -39,8 +39,8 @@ CI must pass before merge: `fmt --check`, `lint`, `check`, `test`, and a Linux c
 ## MCP server architecture
 
 The MCP server lives under `src/mcp/` and exposes the existing `buildReport` core to coding agents
-(Claude Code, Cursor, etc.) via stdio JSON-RPC. It does **not** spawn or shell out to the CLI binary;
-it imports `buildReport` directly so there is one code path and one schema.
+(Claude Code, Cursor, etc.) via stdio JSON-RPC. It does **not** spawn or shell out to the CLI
+binary; it imports `buildReport` directly so there is one code path and one schema.
 
 ```
 src/mcp/
