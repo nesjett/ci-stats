@@ -1,4 +1,4 @@
-# gh-workflow-explorer
+# CI / CD stats viewer
 
 [![CI](https://github.com/nesjett/Github-workflow-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/nesjett/Github-workflow-explorer/actions/workflows/ci.yml)
 [![Release](https://github.com/nesjett/Github-workflow-explorer/actions/workflows/release.yml/badge.svg)](https://github.com/nesjett/Github-workflow-explorer/actions/workflows/release.yml)
@@ -388,7 +388,4 @@ version bump.
 
 ## 📜 License
 
-Released under the [MIT License](./LICENSE) — short, permissive, and the de-facto standard in the
-Deno / GitHub-tooling ecosystem. You're free to use, modify, fork, vendor, and relicense your
-derivative work; just keep the copyright notice. No patent grant — if that matters for your use
-case, vendor the source under Apache-2.0 in your downstream project.
+Released under the [MIT License](./LICENSE)
